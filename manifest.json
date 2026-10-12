@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Base64 Decode & Copy",
+  "version": "1.0.0",
+  "description": "드래그한 Base64 문자열을 우클릭 메뉴로 디코딩해 클립보드에 복사합니다.",
+  "permissions": ["contextMenus", "offscreen", "clipboardWrite", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Base64 Decode & Copy"
+  }
+}
