@@ -10,5 +10,14 @@
   },
   "action": {
     "default_title": "Base64 Decode & Copy"
+  },
+  "commands": {
+    "decode-selection": {
+      "suggested_key": {
+        "default": "Ctrl+B",
+        "mac": "Command+B"
+      },
+      "description": "선택한 Base64 텍스트를 디코딩해 복사"
+    }
   }
 }

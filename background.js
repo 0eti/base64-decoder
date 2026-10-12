@@ -8,12 +8,59 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== MENU_ID) return;
+  decodeAndCopy(info.selectionText || "", tab);
+});
 
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command !== "decode-selection" || !tab) return;
+  let text = "";
+  try {
+    text = await getSelectedText(tab);
+  } catch {
+    await notify(tab, "이 페이지에서는 선택한 텍스트를 읽을 수 없습니다.", false);
+    return;
+  }
+  if (!text.trim()) {
+    await notify(tab, "선택된 텍스트가 없습니다.", false);
+    return;
+  }
+  decodeAndCopy(text, tab);
+});
+
+// 모든 프레임에서 선택 영역을 찾고, 안 되면 최상위 프레임만 시도
+async function getSelectedText(tab) {
+  let results;
+  try {
+    results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id, allFrames: true },
+      func: readSelection
+    });
+  } catch {
+    results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id, frameIds: [0] },
+      func: readSelection
+    });
+  }
+  const hit = results.find((r) => r.result);
+  return hit ? hit.result : "";
+}
+
+// input/textarea 안의 선택은 getSelection()에 잡히지 않으므로 따로 처리
+function readSelection() {
+  const el = document.activeElement;
+  if (el && (el.tagName === "TEXTAREA" || el.tagName === "INPUT") && typeof el.selectionStart === "number") {
+    const s = el.value.substring(el.selectionStart, el.selectionEnd);
+    if (s) return s;
+  }
+  return window.getSelection().toString();
+}
+
+async function decodeAndCopy(text, tab) {
   let decoded;
   try {
-    decoded = decodeBase64(info.selectionText || "");
+    decoded = decodeBase64(text);
   } catch (e) {
     await notify(tab, "Base64 디코딩 실패: 올바른 Base64 문자열이 아닙니다.", false);
     return;
@@ -25,7 +72,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   } catch (e) {
     await notify(tab, "클립보드 복사 실패: " + e.message, false);
   }
-});
+}
 
 // 공백 제거, URL-safe(-_) 변환, 패딩 보정 후 UTF-8로 디코딩
 function decodeBase64(input) {
