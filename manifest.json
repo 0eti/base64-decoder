@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Base64 Decode & Copy",
   "version": "1.0.0",
+  "minimum_chrome_version": "116",
   "description": "드래그한 Base64 문자열을 우클릭 메뉴로 디코딩해 클립보드에 복사합니다.",
   "permissions": ["contextMenus", "offscreen", "clipboardWrite", "activeTab", "scripting"],
   "background": {

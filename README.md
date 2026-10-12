@@ -12,6 +12,8 @@
 
 ## 설치
 
+> Chrome 116 이상 필요 (`chrome.runtime.getContexts` 사용)
+
 1. 이 저장소를 내려받거나 clone 합니다.
 2. 크롬 주소창에 `chrome://extensions` 입력
 3. 오른쪽 위 **개발자 모드** 켜기
