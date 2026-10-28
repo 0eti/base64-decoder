@@ -1,30 +1,58 @@
 # Base64 Decode & Copy
 
-드래그한 Base64 문자열을 우클릭 메뉴 한 번으로 디코딩해 클립보드에 복사하는 크롬 확장프로그램입니다.
+**English** | [한국어](README.ko.md)
 
-## 기능
+A Chrome extension that decodes a selected Base64 string with one right-click and copies the result to the clipboard.
 
-- 텍스트를 드래그한 뒤 우클릭 → **base64decode** 클릭 → 디코딩 결과가 클립보드에 복사됨
-- 단축키 **Ctrl+B** (Mac: **Command+B**): 드래그된 텍스트를 바로 디코딩해 복사 (입력창 안 선택도 지원, `chrome://extensions/shortcuts`에서 변경 가능)
-  - 참고: Google Docs·Gmail 등에서 Ctrl+B(굵게)보다 이 단축키가 우선 적용됩니다. 겹치면 위 주소에서 다른 키로 바꾸세요.
-- 화면 오른쪽 아래에 결과 미리보기 알림 표시 (실패 시 빨간 알림)
-- 줄바꿈·공백 섞인 문자열, URL-safe Base64(`-`, `_`), `=` 패딩 누락 처리
-- UTF-8 디코딩 (한글 등 정상 출력)
-- 데이터 수집·외부 전송 없음
+## Features
 
-## 설치
+- Select text, right-click → **base64decode** → the decoded result is copied to the clipboard
+- Shortcut **Ctrl+B** (Mac: **Command+B**): decodes and copies the selected text right away (selections inside input boxes work too; change the key at `chrome://extensions/shortcuts`)
+  - Note: in Google Docs, Gmail and similar sites this shortcut takes priority over Ctrl+B (bold). If they clash, pick another key at the address above.
+- Shows a preview of the result at the bottom right of the page (red when it fails)
+- Handles strings with line breaks or spaces, URL-safe Base64 (`-`, `_`) and missing `=` padding
+- Decodes as UTF-8, so Korean and other non-ASCII text comes out correctly
+- Collects no data and sends nothing anywhere
 
-> Chrome 116 이상 필요 (`chrome.runtime.getContexts` 사용)
+The notification messages are in Korean.
 
-1. 이 저장소를 내려받거나 clone 합니다.
-2. 크롬 주소창에 `chrome://extensions` 입력
-3. 오른쪽 위 **개발자 모드** 켜기
-4. **압축해제된 확장 프로그램을 로드합니다** → 이 폴더 선택
+## Installation
 
-## 파일 구성
+> Requires Chrome 116 or later (uses `chrome.runtime.getContexts`)
 
-| 파일 | 역할 |
+1. Download or clone this repository.
+2. Type `chrome://extensions` in the Chrome address bar.
+3. Turn on **Developer mode** at the top right.
+4. Click **Load unpacked** → select this folder.
+
+## Files
+
+| File | Role |
 |---|---|
-| `manifest.json` | Manifest V3 설정 |
-| `background.js` | 우클릭 메뉴 등록, Base64 디코딩, 알림 표시 |
-| `offscreen.html` / `offscreen.js` | 클립보드 복사 (서비스 워커는 클립보드에 직접 쓸 수 없어 offscreen 문서 사용) |
+| `manifest.json` | Manifest V3 settings |
+| `background.js` | Registers the right-click menu, decodes Base64, shows notifications |
+| `offscreen.html` / `offscreen.js` | Copies to the clipboard (a service worker cannot write to the clipboard directly, so an offscreen document does it) |
+
+## Structure
+
+```mermaid
+flowchart LR
+    select(["Select Base64 text"])
+    menu["Right-click menu<br/><code>base64decode</code>"]
+    key["Ctrl+B shortcut<br/>reads the selection"]
+    decode["Decode<br/>spaces, URL-safe, padding, UTF-8<br/><code>background.js</code>"]
+    offscreen["Copy to clipboard<br/><code>offscreen.js</code>"]
+    clip[("Clipboard")]
+    notify["Toast on the page<br/>or icon badge<br/><code>background.js</code>"]
+
+    select --> menu & key
+    menu --> decode
+    key --> decode
+    decode -- "decoded text" --> offscreen --> clip
+    offscreen -- "ok / error" --> notify
+    decode -. "invalid Base64" .-> notify
+```
+
+- A service worker has no DOM, so the offscreen document does the clipboard copy.
+- The shortcut reads the selection in every frame with `chrome.scripting.executeScript`, and reads selections inside input boxes separately.
+- Where a toast cannot be shown (such as `chrome://` pages), the extension icon badge shows `OK` or `ERR` instead.
